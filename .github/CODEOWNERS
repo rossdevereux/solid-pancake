@@ -1,0 +1,14 @@
+# Project Ownership Rules
+
+# Default owners for everything
+*       @rossdevereux
+
+# UI specifically
+/voucher-ui/ @rossdevereux
+
+# Core logic
+/voucher-core/ @rossdevereux
+
+# API Modules
+/voucher-admin/ @rossdevereux
+/voucher-user/ @rossdevereux
