@@ -4,7 +4,6 @@ import com.voucher.api.domain.VoucherBatch;
 import com.voucher.api.service.BatchService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,12 +21,8 @@ public class BatchController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VoucherBatch> getById(@PathVariable String id) {
-        try {
-            return ResponseEntity.ok(batchService.getBatch(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public VoucherBatch getById(@PathVariable String id) {
+        return batchService.getBatch(id);
     }
 
     @PostMapping
@@ -36,13 +31,9 @@ public class BatchController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<VoucherBatch> updateStatus(@PathVariable String id,
+    public VoucherBatch updateStatus(@PathVariable String id,
             @RequestBody UpdateStatusRequest request) {
-        try {
-            return ResponseEntity.ok(batchService.updateStatus(id, request.getStatus()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return batchService.updateStatus(id, request.getStatus());
     }
 
     @Data

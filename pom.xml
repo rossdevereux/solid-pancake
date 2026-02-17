@@ -16,8 +16,8 @@
   <description>Voucher Management System Parent Project</description>
 
   <modules>
-    <module>voucher-api</module>
     <module>voucher-ui</module>
+    <module>voucher-api</module>
   </modules>
 
   <properties>

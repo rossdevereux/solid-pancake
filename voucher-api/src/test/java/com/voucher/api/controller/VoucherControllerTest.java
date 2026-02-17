@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,6 +44,7 @@ class VoucherControllerTest {
         request.setCode("TEST-CODE");
 
         mockMvc.perform(post("/api/v1/vouchers/validate")
+                .with(jwt().jwt(j -> j.claim("orgId", "TEST-ORG")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -66,6 +68,7 @@ class VoucherControllerTest {
         request.setUserId("user1");
 
         mockMvc.perform(post("/api/v1/vouchers/redeem")
+                .with(jwt().jwt(j -> j.claim("orgId", "TEST-ORG")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

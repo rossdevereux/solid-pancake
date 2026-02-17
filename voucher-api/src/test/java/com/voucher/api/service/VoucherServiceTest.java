@@ -1,7 +1,6 @@
 package com.voucher.api.service;
 
 import com.voucher.api.domain.Voucher;
-import com.voucher.api.exception.ValidationException;
 import com.voucher.api.repository.VoucherRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,20 +55,21 @@ class VoucherServiceTest {
         // logc.
         // But we can use any() for the hash argument in the repository find.
 
-        when(voucherRepository.findByCodeHashAndOrgId(anyString(), anyString())).thenReturn(Optional.of(voucher));
+        when(voucherRepository.findByCodeHashAndOrgId(anyString(), any())).thenReturn(Optional.of(voucher));
 
         Voucher result = voucherService.validate(code);
 
         assertNotNull(result);
         assertEquals(Voucher.VoucherStatus.ACTIVE, result.getStatus());
-        verify(voucherRepository).findByCodeHashAndOrgId(anyString(), anyString());
+        verify(voucherRepository).findByCodeHashAndOrgId(anyString(), any());
     }
 
     @Test
     void testValidate_NotFound() {
-        when(voucherRepository.findByCodeHashAndOrgId(anyString(), anyString())).thenReturn(Optional.empty());
+        when(voucherRepository.findByCodeHashAndOrgId(anyString(), any())).thenReturn(Optional.empty());
 
-        assertThrows(ValidationException.class, () -> voucherService.validate("INVALID-CODE"));
+        assertThrows(com.voucher.api.exception.ResourceNotFoundException.class,
+                () -> voucherService.validate("INVALID-CODE"));
     }
 
     @Test
@@ -83,7 +83,7 @@ class VoucherServiceTest {
         voucher.setMaxUsage(1);
         voucher.setRedemptions(new ArrayList<>());
 
-        when(voucherRepository.findByCodeHashAndOrgId(anyString(), anyString())).thenReturn(Optional.of(voucher));
+        when(voucherRepository.findByCodeHashAndOrgId(anyString(), any())).thenReturn(Optional.of(voucher));
         when(voucherRepository.save(any(Voucher.class))).thenAnswer(i -> i.getArguments()[0]);
 
         Voucher result = voucherService.redeem(code, userId);

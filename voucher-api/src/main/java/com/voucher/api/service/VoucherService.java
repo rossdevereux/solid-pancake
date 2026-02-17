@@ -34,18 +34,17 @@ public class VoucherService {
     private static final String REDIS_VOUCHER_HASHES_KEY = "voucher:hashes";
 
     @Transactional
-    public void generateVouchers(VoucherBatch batch, VoucherTemplate template) {
-        int count = batch.getQuantity();
+    public int generateVouchers(VoucherBatch batch, VoucherTemplate template, int countToGenerate) {
         String pattern = template.getCodeFormat();
 
         int totalGenerated = 0;
         int attempts = 0;
-        int maxAttempts = 100;
+        int maxAttempts = 10; // Fewer attempts per chunk call
 
-        while (totalGenerated < count && attempts < maxAttempts) {
-            int needed = count - totalGenerated;
-            // Batch size 5000 for better performance
-            int batchSize = Math.min(needed, 5000);
+        while (totalGenerated < countToGenerate && attempts < maxAttempts) {
+            int needed = countToGenerate - totalGenerated;
+            // Batch size 1000 for better responsiveness per chunk
+            int batchSize = Math.min(needed, 1000);
 
             // 1 & 2. Generate candidates in parallel (Generation + Hashing + Encryption)
             List<VoucherCandidate> candidates = java.util.stream.Stream.generate(() -> {
@@ -100,18 +99,14 @@ public class VoucherService {
             }
         }
 
-        if (totalGenerated < count) {
-            throw new RuntimeException("Failed to generate unique codes. Pattern might be exhausted.");
-        }
+        return totalGenerated;
     }
 
     private static class VoucherCandidate {
-        final String code;
         final String hash;
         final String encrypted;
 
         VoucherCandidate(String code, String hash, String encrypted) {
-            this.code = code;
             this.hash = hash;
             this.encrypted = encrypted;
         }
@@ -202,7 +197,7 @@ public class VoucherService {
         String h = hash(code);
         Voucher voucher = voucherRepository
                 .findByCodeHashAndOrgId(h, com.voucher.api.config.TenantContext.getTenantId())
-                .orElseThrow(() -> new ValidationException("Voucher not found"));
+                .orElseThrow(() -> new com.voucher.api.exception.ResourceNotFoundException("Voucher not found"));
 
         if (voucher.getStatus() != Voucher.VoucherStatus.ACTIVE) {
             throw new ValidationException("Voucher is not active");

@@ -16,11 +16,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/validate/**", "/api/v1/redeem/**").permitAll() // Public endpoints? Or
-                                                                                                 // also secured?
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .addFilterAfter(new TenantFilter(),
+                        org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 
@@ -28,10 +28,6 @@ public class SecurityConfig {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            String orgId = jwt.getClaimAsString("orgId");
-            if (orgId != null) {
-                TenantContext.setTenantId(orgId);
-            }
             // Return empty authorities for now or map roles if needed
             return java.util.Collections.emptyList();
         });

@@ -15,12 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +37,12 @@ class VoucherIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @Autowired
     private VoucherTemplateRepository templateRepository;
@@ -52,6 +64,11 @@ class VoucherIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
         voucherRepository.deleteAll();
         batchRepository.deleteAll();
         templateRepository.deleteAll();
@@ -59,21 +76,24 @@ class VoucherIntegrationTest {
 
     @Test
     void testFullVoucherLifecycle() throws Exception {
+        String orgId = "TEST-ORG";
         // 1. Create Template
         VoucherTemplate template = new VoucherTemplate();
         template.setName("Test Template");
         template.setCodeFormat("TEST-####");
+        template.setOrgId(orgId);
         template = templateRepository.save(template);
 
         // 2. Create Batch & Generate Vouchers
         VoucherBatch batch = new VoucherBatch();
+        batch.setOrgId(orgId);
         batch.setTemplateId(template.getId());
         batch.setQuantity(10);
         batch.setStatus(VoucherBatch.BatchStatus.GENERATING);
         batch.setCreatedDate(LocalDateTime.now());
         batch = batchRepository.save(batch);
 
-        voucherService.generateVouchers(batch, template);
+        voucherService.generateVouchers(batch, template, batch.getQuantity());
 
         // Verify generation
         List<Voucher> vouchers = voucherRepository.findAll();
@@ -87,6 +107,7 @@ class VoucherIntegrationTest {
         validateRequest.setCode(rawCode);
 
         mockMvc.perform(post("/api/v1/vouchers/validate")
+                .with(jwt().jwt(j -> j.claim("orgId", orgId)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validateRequest)))
                 .andExpect(status().isOk())
@@ -98,6 +119,7 @@ class VoucherIntegrationTest {
         redeemRequest.setUserId("test-user");
 
         mockMvc.perform(post("/api/v1/vouchers/redeem")
+                .with(jwt().jwt(j -> j.claim("orgId", orgId)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(redeemRequest)))
                 .andExpect(status().isOk())
