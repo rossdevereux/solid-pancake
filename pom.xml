@@ -17,7 +17,9 @@
 
   <modules>
     <module>voucher-ui</module>
-    <module>voucher-api</module>
+    <module>voucher-core</module>
+    <module>voucher-admin</module>
+    <module>voucher-user</module>
   </modules>
 
   <properties>

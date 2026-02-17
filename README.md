@@ -1,69 +1,71 @@
 # Voucher Management System
 
-A comprehensive voucher management system with a Spring Boot backend and React (Vite) frontend.
+A comprehensive voucher management system with a modular Spring Boot backend and a React (Vite) frontend.
 
 ## Project Structure
 
-- **voucher-api**: Java Spring Boot application (Backend)
-- **voucher-ui**: React application built with Vite and TypeScript (Frontend)
+- **voucher-core**: Shared domain models, repositories, and core business logic.
+- **voucher-admin**: Admin API for template management, batch generation (async via RabbitMQ), and statistics. Runs on port `8081`.
+- **voucher-user**: User-facing API for voucher validation and redemption. Optimized for GraalVM native compilation. Runs on port `8080`.
+- **voucher-ui**: React application built with Vite and TypeScript (Frontend). Runs on port `5173`.
 
 ## Prerequisites
 
 Ensure you have the following installed:
-- **Java 21**: Required for the backend.
-- **Maven**: For building the Java project.
-- **Node.js** (v18+): Required for the frontend.
-- **MongoDB**: Must be running on `localhost:27017`.
-- **Redis**: Must be running on `localhost:6379`.
+- **Java 21**: Required for the backend modules.
+- **Maven**: For building the Java projects.
+- **Node.js** (v20.19+): Required for the frontend.
+- **MongoDB**: Used for persistent storage of templates and vouchers.
+- **Redis**: Used for high-speed voucher code caching and lookups.
+- **RabbitMQ**: Required for asynchronous voucher batch generation.
 
 ## Getting Started
 
-### 1. Database Setup
-Ensure your local MongoDB and Redis instances are up and running.
+### 1. Infrastructure Setup
+Ensure your local instances of MongoDB, Redis, and RabbitMQ are running.
 - **MongoDB**: Default port `27017`
 - **Redis**: Default port `6379`
+- **RabbitMQ**: Default port `5672` (Management UI at `http://localhost:15672`)
 
-### 2. Running the Backend (voucher-api)
-The backend runs on port `8080`.
+### 2. Running the Backend Services
 
-**Using Maven:**
+**A. Admin Service (voucher-admin):**
 ```bash
-cd voucher-api
-mvn spring-boot:run
+mvn -pl voucher-admin spring-boot:run
 ```
+API available at: `http://localhost:8081`
 
-**From the Root Directory:**
+**B. User Service (voucher-user):**
 ```bash
-mvn -pl voucher-api spring-boot:run
+mvn -pl voucher-user spring-boot:run
 ```
-
-Once started, the API will be available at: `http://localhost:8080`
+API available at: `http://localhost:8080`
 
 ### 3. Running the Frontend (voucher-ui)
-The frontend runs on port `5173`.
-
-**Setup and Run:**
 ```bash
 cd voucher-ui
 npm install
 npm run dev
 ```
-
 Open your browser and navigate to: `http://localhost:5173`
 
 ## Building the Project
 
-To build the entire project (both backend and frontend), run the following command from the root directory:
+To build the entire project (all backend modules and frontend), run from the root directory:
 
 ```bash
 mvn clean install
 ```
 
-This will:
-1. Build the backend JAR.
-2. Install Node/NPM and build the frontend assets (via `frontend-maven-plugin` in `voucher-ui`).
+### Native Image Compilation (voucher-user)
+To build a native executable for the user service (requires GraalVM):
+```bash
+mvn -pl voucher-user -Pnative native:compile
+```
 
 ## Configuration
 
-- **Backend**: `voucher-api/src/main/resources/application.yml`
-- **Frontend**: `voucher-ui/vite.config.ts` and `.env` (if applicable).
+- **Core Logic**: `voucher-core/src/main/java/com/voucher/core`
+- **Admin Configuration**: `voucher-admin/src/main/resources/application.yml`
+- **User Configuration**: `voucher-user/src/main/resources/application.yml`
+- **Frontend Configuration**: `voucher-ui/vite.config.ts`
