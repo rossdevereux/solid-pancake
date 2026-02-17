@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: voucher-api
+app:
+  cors:
+    allowed-origins: "*"
+  docker:
+    compose:
+      skip:
+        in-tests: false
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.voucher.api: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  tracing:
+    sampling:
+      probability: 1.0
