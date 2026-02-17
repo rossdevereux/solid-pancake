@@ -84,7 +84,7 @@ class VoucherLoadTest {
         batch.setCreatedDate(LocalDateTime.now());
         batch = batchRepository.save(batch);
 
-        voucherService.generateVouchers(batch, template);
+        voucherService.generateVouchers(batch, template, voucherCount);
 
         List<Voucher> vouchers = voucherRepository.findAll();
         assertEquals(voucherCount, vouchers.size());
@@ -150,7 +150,7 @@ class VoucherLoadTest {
         batch = batchRepository.save(batch);
 
         long startTime = System.currentTimeMillis();
-        voucherService.generateVouchers(batch, template);
+        voucherService.generateVouchers(batch, template, quantity);
         long duration = System.currentTimeMillis() - startTime;
 
         List<Voucher> vouchers = voucherRepository.findAll();

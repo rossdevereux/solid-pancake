@@ -73,7 +73,7 @@ class VoucherIntegrationTest {
         batch.setCreatedDate(LocalDateTime.now());
         batch = batchRepository.save(batch);
 
-        voucherService.generateVouchers(batch, template);
+        voucherService.generateVouchers(batch, template, batch.getQuantity());
 
         // Verify generation
         List<Voucher> vouchers = voucherRepository.findAll();

@@ -19,6 +19,7 @@ public class VoucherBatch {
     private String templateId;
     private BatchStatus status = BatchStatus.PENDING;
     private int quantity;
+    private int generatedCount = 0;
     private LocalDateTime createdDate = LocalDateTime.now();
     private LocalDateTime expiryDate;
 
