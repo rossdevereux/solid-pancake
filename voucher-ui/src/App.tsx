@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Dashboard } from './pages/Dashboard';
 import { Templates } from './pages/Templates';
 import { Batches } from './pages/Batches';
+import { Login } from './pages/Login';
 
 const queryClient = new QueryClient();
 
@@ -17,13 +18,12 @@ function App() {
         <CssBaseline />
         <ErrorBoundary>
           <Router>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/templates" element={<Templates />} />
-                <Route path="/batches" element={<Batches />} />
-              </Routes>
-            </Layout>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/templates" element={<Layout><Templates /></Layout>} />
+              <Route path="/batches" element={<Layout><Batches /></Layout>} />
+            </Routes>
           </Router>
         </ErrorBoundary>
       </ThemeProvider>

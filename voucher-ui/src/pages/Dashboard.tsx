@@ -18,7 +18,7 @@ export const Dashboard: React.FC = () => {
 
     const cards = [
         { label: 'Total Vouchers', value: stats?.totalVouchers || 0, icon: <ConfirmationNumberIcon color="primary" />, color: 'primary' },
-        { label: 'Active Batches', value: stats?.activeBatches || 0, icon: <LayersIcon color="secondary" />, color: 'secondary' },
+        { label: 'Processing Batches', value: stats?.pendingBatches || 0, icon: <LayersIcon color="secondary" />, color: 'secondary' },
         { label: 'Redeemed Today', value: stats?.redeemedToday || 0, icon: <CheckCircleIcon color="success" />, color: 'success' },
         { label: 'Active Vouchers', value: stats?.activeVouchers || 0, icon: <DashboardIcon color="info" />, color: 'info' },
     ];

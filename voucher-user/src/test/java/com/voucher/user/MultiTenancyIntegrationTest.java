@@ -31,6 +31,9 @@ class MultiTenancyIntegrationTest {
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
+    @MockitoBean
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @Autowired
     private VoucherRepository voucherRepository;
 

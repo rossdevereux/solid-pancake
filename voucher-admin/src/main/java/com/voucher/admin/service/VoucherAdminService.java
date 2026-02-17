@@ -1,18 +1,23 @@
 package com.voucher.admin.service;
 
+import com.voucher.core.config.RabbitStatsConfig;
 import com.voucher.core.domain.Voucher;
 import com.voucher.core.domain.VoucherBatch;
+import com.voucher.core.domain.VoucherStatsMessage;
 import com.voucher.core.domain.VoucherTemplate;
 import com.voucher.core.repository.VoucherRepository;
 import com.voucher.core.service.EncryptionService;
 import com.voucher.core.service.VoucherCoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +32,7 @@ public class VoucherAdminService {
     private final EncryptionService encryptionService;
     private final StringRedisTemplate redisTemplate;
     private final VoucherCoreService voucherCoreService;
+    private final RabbitTemplate rabbitTemplate;
 
     private static final String REDIS_VOUCHER_HASHES_KEY = "voucher:hashes";
 
@@ -90,6 +96,17 @@ public class VoucherAdminService {
             } else {
                 attempts++;
             }
+        }
+
+        if (totalGenerated > 0) {
+            String today = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            VoucherStatsMessage statsMessage = VoucherStatsMessage.builder()
+                    .orgId(batch.getOrgId())
+                    .type(VoucherStatsMessage.StatsType.GENERATION)
+                    .count(totalGenerated)
+                    .date(today)
+                    .build();
+            rabbitTemplate.convertAndSend(RabbitStatsConfig.VOUCHER_STATS_EXCHANGE, RabbitStatsConfig.VOUCHER_STATS_ROUTING_KEY, statsMessage);
         }
 
         return totalGenerated;
