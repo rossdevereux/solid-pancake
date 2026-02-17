@@ -42,6 +42,9 @@ class VoucherIntegrationTest {
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
+    @MockitoBean
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @Autowired
     private VoucherTemplateRepository templateRepository;
 

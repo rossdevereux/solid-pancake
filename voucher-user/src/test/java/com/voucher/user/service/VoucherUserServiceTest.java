@@ -27,6 +27,9 @@ class VoucherUserServiceTest {
     @Mock
     private VoucherCoreService voucherCoreService;
 
+    @Mock
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @InjectMocks
     private VoucherUserService voucherUserService;
 
