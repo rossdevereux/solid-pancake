@@ -16,7 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +43,12 @@ class VoucherLoadTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @Autowired
     private VoucherTemplateRepository templateRepository;
@@ -58,6 +70,11 @@ class VoucherLoadTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
         voucherRepository.deleteAll();
         batchRepository.deleteAll();
         templateRepository.deleteAll();
@@ -69,15 +86,18 @@ class VoucherLoadTest {
         int threads = 10;
 
         // 1. Setup Data
+        String orgId = "LOAD-ORG";
         VoucherTemplate template = new VoucherTemplate();
         template.setName("Load Test Template");
         template.setCodeFormat("LOAD-#####");
+        template.setOrgId(orgId);
         VoucherTemplate.RedemptionLimit limit = new VoucherTemplate.RedemptionLimit();
         limit.setLimitPerUser(1);
         template.setRedemptionLimit(limit);
         template = templateRepository.save(template);
 
         VoucherBatch batch = new VoucherBatch();
+        batch.setOrgId(orgId);
         batch.setTemplateId(template.getId());
         batch.setQuantity(voucherCount);
         batch.setStatus(VoucherBatch.BatchStatus.GENERATING);
@@ -111,6 +131,7 @@ class VoucherLoadTest {
                     request.setUserId("user-" + System.nanoTime()); // Unique user per redemption
 
                     mockMvc.perform(post("/api/v1/vouchers/redeem")
+                            .with(jwt().jwt(j -> j.claim("orgId", orgId)))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                             .andExpect(status().isOk());
@@ -136,13 +157,16 @@ class VoucherLoadTest {
     @Test
     void testBulkGenerationPerformance() {
         int quantity = 10000; // Testing local batch generation speed
+        String orgId = "PERF-ORG";
 
         VoucherTemplate template = new VoucherTemplate();
         template.setName("Perf Test Template");
         template.setCodeFormat("PERF-#####");
+        template.setOrgId(orgId);
         template = templateRepository.save(template);
 
         VoucherBatch batch = new VoucherBatch();
+        batch.setOrgId(orgId);
         batch.setTemplateId(template.getId());
         batch.setQuantity(quantity);
         batch.setStatus(VoucherBatch.BatchStatus.GENERATING);
