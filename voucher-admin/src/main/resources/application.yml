@@ -10,6 +10,12 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://127.0.0.1:8083
+          jwk-set-uri: http://127.0.0.1:8083/jwks
 
 server:
   port: 8081

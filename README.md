@@ -26,6 +26,11 @@ Ensure your local instances of MongoDB, Redis, and RabbitMQ are running.
 - **MongoDB**: Default port `27017`
 - **Redis**: Default port `6379`
 - **RabbitMQ**: Default port `5672` (Management UI at `http://localhost:15672`)
+- **Mock Auth Server**: Runs on port `8083` (`http://127.0.0.1:8083`). Required for UI login.
+  ```bash
+  cd voucher-ui
+  npm run auth-server
+  ```
 
 ### 2. Running the Backend Services
 
